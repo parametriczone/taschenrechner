@@ -1,1 +1,2 @@
 viktor==14.12.0
+drawsvg~=2.0

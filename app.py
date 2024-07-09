@@ -2,9 +2,12 @@ from viktor import ViktorController, Color
 from viktor.parametrization import ViktorParametrization, NumberField, SetParamsButton
 from viktor.views import DataView, DataResult, DataGroup, DataItem, GeometryResult, GeometryView
 from viktor.result import SetParamsResult
+from viktor.geometry import Group, Line, Material, RectangularExtrusion, Point
+import matplotlib.pyplot as plt
+import numpy as np
+from io import StringIO
+from viktor.views import ImageView, ImageResult
 import math
-from viktor.geometry import Group, LinearPattern, SquareBeam, Material
-
 
 class Parametrization(ViktorParametrization):
     x = NumberField('Abstand in der Länge', suffix='m', default=0, step=0.01)
@@ -82,23 +85,41 @@ class RechnerController(ViktorController):
 
         return DataResult(main_data_group)
 
-    @GeometryView("Geometry", duration_guess=1, x_axis_to_right=True)
-    def geometry_view(self, params, **kwargs):
+    @ImageView("Plot", duration_guess=1)
+    def create_result(self, params, **kwargs):
+        # Get x and y from params
+        x = params.x
+        y = params.y
 
-        # Define Materials
-        glass = Material("Glass", color=Color(150, 150, 255))
-        facade = Material("Facade", color=Color.white())
+        # Determine the larger value between x and y
+        max_value = max(abs(x), abs(y))
 
-        # Create one floor
-        width = 30
-        length = 30
-        number_of_floors = 20
-        floor_glass = SquareBeam(width, length, 2, material=glass)
-        floor_facade = SquareBeam(width + 1, length + 1, 1, material=facade)
-        floor_facade.translate([0, 0, 1.5])
-    
-        # Pattern (duplicate) the floor to create a building
-        floor = Group([floor_glass, floor_facade])
-        building = LinearPattern(floor, direction=[0, 0, 1], number_of_elements=number_of_floors, spacing=3)
-    
-        return GeometryResult(building)    
+        # Calculate coordinates for the line, scaled to fit the plot
+        start_point = [0, 0]
+        end_point = [x / max_value, y / max_value]  # Scale to fit plot size
+
+        # Initialize figure
+        fig = plt.figure()
+
+        # Plot the line
+        plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], marker='o')
+
+        # Set equal aspect ratio to make steps equal
+        plt.gca().set_aspect('equal', adjustable='box')
+
+        # Remove step labels from axes
+        plt.xticks([])
+        plt.yticks([])
+
+        # Add labels and title with formatted strings
+        plt.xlabel(f'Abstand horizontal: {x}')
+        plt.ylabel(f'Abstand vertikal: {y}')
+        plt.title('Visualisierung')
+
+        # Save figure as SVG
+        svg_data = StringIO()
+        fig.savefig(svg_data, format='svg')
+        plt.close()
+
+        # Return the SVG data as ImageResult
+        return ImageResult(svg_data)
