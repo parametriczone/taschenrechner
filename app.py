@@ -1,8 +1,10 @@
-from viktor import ViktorController
+from viktor import ViktorController, Color
 from viktor.parametrization import ViktorParametrization, NumberField, SetParamsButton
-from viktor.views import DataView, DataResult, DataGroup, DataItem
+from viktor.views import DataView, DataResult, DataGroup, DataItem, GeometryResult, GeometryView
 from viktor.result import SetParamsResult
 import math
+from viktor.geometry import Group, LinearPattern, SquareBeam, Material
+
 
 class Parametrization(ViktorParametrization):
     x = NumberField('Abstand in der Länge', suffix='m', default=0, step=0.01)
@@ -79,3 +81,24 @@ class RechnerController(ViktorController):
             )
 
         return DataResult(main_data_group)
+
+    @GeometryView("Geometry", duration_guess=1, x_axis_to_right=True)
+    def geometry_view(self, params, **kwargs):
+
+        # Define Materials
+        glass = Material("Glass", color=Color(150, 150, 255))
+        facade = Material("Facade", color=Color.white())
+
+        # Create one floor
+        width = 30
+        length = 30
+        number_of_floors = 20
+        floor_glass = SquareBeam(width, length, 2, material=glass)
+        floor_facade = SquareBeam(width + 1, length + 1, 1, material=facade)
+        floor_facade.translate([0, 0, 1.5])
+    
+        # Pattern (duplicate) the floor to create a building
+        floor = Group([floor_glass, floor_facade])
+        building = LinearPattern(floor, direction=[0, 0, 1], number_of_elements=number_of_floors, spacing=3)
+    
+        return GeometryResult(building)    
