@@ -1,5 +1,5 @@
 from viktor import ViktorController, Color
-from viktor.parametrization import ViktorParametrization, NumberField, SetParamsButton
+from viktor.parametrization import ViktorParametrization, NumberField, SetParamsButton, Text
 from viktor.views import DataView, DataResult, DataGroup, DataItem, GeometryResult, GeometryView
 from viktor.result import SetParamsResult
 from viktor.geometry import Group, Line, Material, RectangularExtrusion, Point
@@ -10,6 +10,8 @@ from viktor.views import ImageView, ImageResult
 import math
 
 class Parametrization(ViktorParametrization):
+    intro = Text("## Slope calculator \n This app calculates all values from a given two values and visualizes the slope in a matplotlib dasboard. \n\n To put in new values you have to reset the values with the reset-button below.")
+
     x = NumberField('Abstand in der Länge', suffix='m', default=0, step=0.01)
     y = NumberField('Abstand in der Höhe', suffix='m', default=0, step=0.01)
     angle = NumberField('Steigung in Grad', suffix='°', default=0, step=0.01)
