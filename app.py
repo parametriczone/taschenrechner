@@ -85,24 +85,40 @@ class RechnerController(ViktorController):
 
         return DataResult(main_data_group)
 
-    @ImageView("Plot", duration_guess=1)
+    @ImageView("Visualisierung", duration_guess=1)
     def create_result(self, params, **kwargs):
-        # Get x and y from params
+        # Get x (Abstand in der Länge) and y (Abstand in der Höhe) from params
         x = params.x
         y = params.y
 
-        # Determine the larger value between x and y
-        max_value = max(abs(x), abs(y))
+        # Get angle (Steigung in Grad) and slope (Steigung in Prozent) from params
+        angle = params.angle
+        slope = params.slope
 
-        # Calculate coordinates for the line, scaled to fit the plot
-        start_point = [0, 0]
-        end_point = [x / max_value, y / max_value]  # Scale to fit plot size
+        # Calculate coordinates for the line
+        if x != 0 and y != 0:
+            # Both x and y are provided
+            end_point = [x, y]
+        elif x != 0 and angle != 0:
+            # x and angle are provided
+            end_point = [x, x * np.tan(np.radians(angle))]
+        elif x != 0 and slope != 0:
+            # x and slope are provided
+            end_point = [x, x * slope / 100]
+        elif y != 0 and angle != 0:
+            # y and angle are provided
+            end_point = [y / np.tan(np.radians(angle)), y]
+        elif y != 0 and slope != 0:
+            # y and slope are provided
+            end_point = [y / (slope / 100), y]
+        else:
+            raise ValueError("Ungültige Kombination von Inputs")
 
         # Initialize figure
         fig = plt.figure()
 
         # Plot the line
-        plt.plot([start_point[0], end_point[0]], [start_point[1], end_point[1]], marker='o')
+        plt.plot([0, end_point[0]], [0, end_point[1]], marker='o')
 
         # Set equal aspect ratio to make steps equal
         plt.gca().set_aspect('equal', adjustable='box')
@@ -112,8 +128,8 @@ class RechnerController(ViktorController):
         plt.yticks([])
 
         # Add labels and title with formatted strings
-        plt.xlabel(f'Abstand horizontal: {x}')
-        plt.ylabel(f'Abstand vertikal: {y}')
+        plt.xlabel(f'Abstand horizontal: {end_point[0]}')
+        plt.ylabel(f'Abstand vertikal: {end_point[1]}')
         plt.title('Visualisierung')
 
         # Save figure as SVG
